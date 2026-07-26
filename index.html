@@ -112,17 +112,17 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Keeps the top and bottom sections inside the rounded corners */
+    overflow: hidden; 
   }
 
   /* Card Front Layout */
   .card-front {
-    background-color: white; /* White behind picture */
+    background-color: white; 
     border: 2px solid #ccc;
   }
 
   .card-header {
-    background-color: var(--gray-bg); /* Gray behind text */
+    background-color: var(--gray-bg); 
     padding: 8px;
     font-weight: bold;
     font-size: 1rem;
@@ -131,7 +131,7 @@
   }
 
   .card-image {
-    flex: 1; /* Takes up remaining middle space */
+    flex: 1; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,7 +145,7 @@
   }
 
   .card-footer {
-    background-color: var(--gray-bg); /* Gray behind text */
+    background-color: var(--gray-bg); 
     padding: 8px;
     font-weight: bold;
     font-size: 1rem;
@@ -196,7 +196,6 @@
   </div>
 
 <script>
-  // Updated with image names matching the Pokemon HOME 3D Sprite database
   const dex = [
     {
       route: "Route 1",
@@ -260,22 +259,33 @@
     renderRoute();
   }
 
-  function toggleCaught(pokeName) {
+  // FIXED: Now we only toggle the class on the clicked card, instead of redrawing everything!
+  function toggleCaught(pokeName, cardElement) {
     if (caughtData[pokeName]) {
       delete caughtData[pokeName]; 
+      cardElement.classList.remove('caught'); // Triggers the un-flip animation
     } else {
       caughtData[pokeName] = true; 
+      cardElement.classList.add('caught'); // Triggers the flip animation
     }
     localStorage.setItem('reloadedCaught', JSON.stringify(caughtData));
-    renderRoute(); 
+    updateProgressText(); 
   }
 
-  // Translates the text into emojis
+  function updateProgressText() {
+    const route = dex[currentRoute];
+    let caughtInRoute = 0;
+    route.pokemon.forEach(poke => {
+      if (caughtData[poke.name]) caughtInRoute++;
+    });
+    document.getElementById('progressText').innerText = `Caught: ${caughtInRoute} / ${route.pokemon.length}`;
+  }
+
   function getIcon(time) {
     if (time === "Day only") return "☀️";
     if (time === "Night only") return "🌙";
     if (time === "Surfing") return "🌊";
-    return ""; // All day gets nothing
+    return ""; 
   }
 
   function renderRoute() {
@@ -286,19 +296,17 @@
     document.getElementById('nextBtn').disabled = currentRoute === dex.length - 1;
     
     const grid = document.getElementById('cardGrid');
-    grid.innerHTML = '';
-    
-    let caughtInRoute = 0;
+    grid.innerHTML = ''; // Only clear the grid when changing routes now
     
     route.pokemon.forEach(poke => {
       const isCaught = caughtData[poke.name] === true;
-      if (isCaught) caughtInRoute++;
       
       const card = document.createElement('div');
       card.className = `card ${isCaught ? 'caught' : ''}`;
-      card.onclick = () => toggleCaught(poke.name);
       
-      // Pulls highly consistent 3D HOME renders
+      // Pass the specific card element to the function so it can be animated
+      card.onclick = function() { toggleCaught(poke.name, this); };
+      
       const imgUrl = `https://img.pokemondb.net/sprites/home/normal/${poke.img}.png`;
       const icon = getIcon(poke.time);
       
@@ -322,7 +330,7 @@
       grid.appendChild(card);
     });
     
-    document.getElementById('progressText').innerText = `Caught: ${caughtInRoute} / ${route.pokemon.length}`;
+    updateProgressText();
   }
 
   window.onload = init;
