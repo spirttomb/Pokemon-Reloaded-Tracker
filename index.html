@@ -184,6 +184,7 @@
       <button id="nextBtn">Next &gt;</button>
     </div>
     <div class="progress" id="progressText">Caught: 0 / 0</div>
+    <div class="progress" id="totalProgress" style="color: var(--primary);">Total Caught: 0 / 0</div>
   </div>
   
   <div id="cardGrid" class="grid">
@@ -233,6 +234,22 @@
         { name: "Azurill", rate: "2%", time: "Surfing", img: "azurill" },
         { name: "Clodsire", rate: "2%", time: "Surfing", img: "clodsire" },
         { name: "Azumarill", rate: "1%", time: "Surfing", img: "azumarill" }
+      ]
+    },
+    {
+      route: "Spica Forest",
+      pokemon: [
+        { name: "Kricketot", rate: "10%", time: "All day", img: "kricketot" },
+        { name: "Ledyba", rate: "10%", time: "Day only", img: "ledyba" },
+        { name: "Gastly", rate: "10%", time: "Night only", img: "gastly" },
+        { name: "Spinarak", rate: "10%", time: "Night only", img: "spinarak" },
+        { name: "Venipede", rate: "10%", time: "All day", img: "venipede" },
+        { name: "Gothita", rate: "8%", time: "Day only", img: "gothita" },
+        { name: "Scatterbug", rate: "7%", time: "All day", img: "scatterbug" },
+        { name: "Spewpa", rate: "3%", time: "All day", img: "spewpa" },
+        { name: "Nymble", rate: "4%", time: "Night only", img: "nymble" },
+        { name: "Tarountula", rate: "4%", time: "Day only", img: "tarountula" },
+        { name: "Sewaddle", rate: "2%", time: "All day", img: "sewaddle" }
       ]
     },
     {
@@ -356,7 +373,6 @@
         { name: "Stantler", rate: "6%", time: "All day", img: "stantler" },
         { name: "Scraggy", rate: "6%", time: "All day", img: "scraggy" },
         { name: "Inkay", rate: "5%", time: "All day", img: "inkay" },
-        { name: "Kricketot", rate: "5%", time: "All day", img: "kricketot" },
         { name: "Fomantis", rate: "5%", time: "Day only", img: "fomantis" },
         { name: "Morelull", rate: "5%", time: "Night only", img: "morelull" },
         { name: "Woobat", rate: "5%", time: "All day", img: "woobat" },
@@ -433,8 +449,6 @@
         { name: "Rellor", rate: "2%", time: "All day", img: "rellor" },
         { name: "Diggersby", rate: "2%", time: "All day", img: "diggersby" },
         { name: "Fletchinder", rate: "2%", time: "All day", img: "fletchinder" },
-        { name: "Sewaddle", rate: "2%", time: "All day", img: "sewaddle" },
-        { name: "Venipede", rate: "2%", time: "All day", img: "venipede" },
         { name: "Toedscruel", rate: "1%", time: "All day", img: "toedscruel" },
         { name: "Boltund", rate: "1%", time: "All day", img: "boltund" }
       ]
@@ -449,7 +463,6 @@
         { name: "Fearow", rate: "8%", time: "Night only", img: "fearow" },
         { name: "Vulpix", rate: "8%", time: "All day", img: "vulpix" },
         { name: "Mimikyu", rate: "5%", time: "All day", img: "mimikyu" },
-        { name: "Gothita", rate: "5%", time: "All day", img: "gothita" },
         { name: "Galarian Ponyta", rate: "5%", time: "All day", img: "ponyta-galarian" },
         { name: "Hisuian Voltorb", rate: "4%", time: "All day", img: "voltorb-hisui" },
         { name: "Smoliv", rate: "3%", time: "All day", img: "smoliv" },
@@ -532,6 +545,16 @@
       if (caughtData[poke.name]) caughtInRoute++;
     });
     document.getElementById('progressText').innerText = `Caught: ${caughtInRoute} / ${route.pokemon.length}`;
+
+    let totalPokemon = 0;
+    let totalCaught = 0;
+    dex.forEach(r => {
+      r.pokemon.forEach(p => {
+        totalPokemon++;
+        if (caughtData[p.name]) totalCaught++;
+      });
+    });
+    document.getElementById('totalProgress').innerText = `Total Caught: ${totalCaught} / ${totalPokemon}`;
   }
 
   function getIcon(time) {
