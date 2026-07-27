@@ -172,6 +172,41 @@
     transform: rotate(-15deg);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
+
+  /* Catch celebration: little bounce once the card lands on its "caught" face */
+  @keyframes catchPop {
+    0%   { transform: rotateY(180deg) scale(1); }
+    40%  { transform: rotateY(180deg) scale(1.18); }
+    70%  { transform: rotateY(180deg) scale(0.96); }
+    100% { transform: rotateY(180deg) scale(1); }
+  }
+  .card.catch-pop .card-inner {
+    animation: catchPop 0.5s ease;
+  }
+
+  /* Confetti burst */
+  .confetti-piece {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 1;
+    animation: confettiBurst 0.8s ease-out forwards;
+  }
+  @keyframes confettiBurst {
+    0% {
+      transform: translate(0, 0) rotate(0deg) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4);
+      opacity: 0;
+    }
+  }
 </style>
 </head>
 <body>
@@ -512,6 +547,75 @@
 
   let currentRoute = 0;
   let caughtData = JSON.parse(localStorage.getItem('reloadedCaught')) || {};
+  let audioCtx = null;
+
+  function playChime() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // A quick bright ascending arpeggio - C5, E5, G5, C6
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const startTime = audioCtx.currentTime + i * 0.09;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.4);
+      });
+    } catch (e) {
+      // Web Audio not available - fail silently, animation still plays
+    }
+  }
+
+  function spawnConfetti(x, y) {
+    const colors = ['#ee1515', '#ffcb05', '#3b4cca', '#4caf50', '#ff8c00'];
+    const pieceCount = 14;
+
+    for (let i = 0; i < pieceCount; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+
+      const angle = (Math.PI * 2 * i) / pieceCount + Math.random() * 0.5;
+      const distance = 60 + Math.random() * 50;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance - 20; // slight upward bias
+
+      piece.style.left = `${x}px`;
+      piece.style.top = `${y}px`;
+      piece.style.setProperty('--tx', `${tx}px`);
+      piece.style.setProperty('--ty', `${ty}px`);
+      piece.style.setProperty('--rot', `${Math.random() * 360}deg`);
+      piece.style.backgroundColor = colors[i % colors.length];
+
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 850);
+    }
+  }
+
+  function celebrateCatch(cardElement) {
+    const rect = cardElement.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    playChime();
+    spawnConfetti(centerX, centerY);
+
+    // Bounce the card once it has finished flipping over (flip takes 0.6s)
+    setTimeout(() => {
+      cardElement.classList.add('catch-pop');
+      setTimeout(() => cardElement.classList.remove('catch-pop'), 500);
+    }, 550);
+  }
 
   function init() {
     document.getElementById('prevBtn').addEventListener('click', () => changeRoute(-1));
@@ -533,6 +637,7 @@
     } else {
       caughtData[pokeName] = true; 
       cardElement.classList.add('caught');
+      celebrateCatch(cardElement);
     }
     localStorage.setItem('reloadedCaught', JSON.stringify(caughtData));
     updateProgressText(); 
