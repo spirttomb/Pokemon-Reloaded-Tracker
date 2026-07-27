@@ -457,4 +457,136 @@
         { name: "Girafarig", rate: "2%", time: "Day only", img: "girafarig" },
         { name: "Absol", rate: "2%", time: "Night only", img: "absol" },
         { name: "Dolliv", rate: "1%", time: "All day", img: "dolliv" },
-        { name: "Hi
+        { name: "Hisuian Electrode", rate: "1%", time: "All day", img: "electrode-hisui" }
+      ]
+    },
+    {
+      route: "Route 17",
+      pokemon: [
+        { name: "Phantump", rate: "20%", time: "Night only", img: "phantump" },
+        { name: "Buneary", rate: "6%", time: "All day", img: "buneary" },
+        { name: "Swellow", rate: "5%", time: "Day only", img: "swellow" },
+        { name: "Noctowl", rate: "5%", time: "Night only", img: "noctowl" },
+        { name: "Komala", rate: "5%", time: "All day", img: "komala" },
+        { name: "Breloom", rate: "2%", time: "Day only", img: "breloom" },
+        { name: "Indeedee (M)", rate: "5%", time: "All day", img: "indeedee-male" },
+        { name: "Indeedee (F)", rate: "5%", time: "All day", img: "indeedee-female" },
+        { name: "Liepard", rate: "5%", time: "All day", img: "liepard" }
+      ]
+    },
+    {
+      route: "Route 18",
+      pokemon: [
+        { name: "Dwebble", rate: "10%", time: "All day", img: "dwebble" },
+        { name: "Geodude", rate: "5%", time: "All day", img: "geodude" },
+        { name: "Graveler", rate: "5%", time: "All day", img: "graveler" },
+        { name: "Litleo", rate: "5%", time: "All day", img: "litleo" },
+        { name: "Dubwool", rate: "5%", time: "All day", img: "dubwool" },
+        { name: "Trumbeak", rate: "5%", time: "Day only", img: "trumbeak" },
+        { name: "Corvisquire", rate: "5%", time: "Night only", img: "corvisquire" },
+        { name: "Skarmory", rate: "5%", time: "All day", img: "skarmory" },
+        { name: "Crustle", rate: "5%", time: "All day", img: "crustle" },
+        { name: "Durant", rate: "4%", time: "All day", img: "durant" },
+        { name: "Minior", rate: "2%", time: "All day", img: "minior" },
+        { name: "Tinkatuff", rate: "1%", time: "All day", img: "tinkatuff" },
+        { name: "Copperajah", rate: "1%", time: "All day", img: "copperajah" },
+        { name: "Skuntank", rate: "1%", time: "All day", img: "skuntank" },
+        { name: "Gurdurr", rate: "1%", time: "All day", img: "gurdurr" },
+        { name: "Tyrogue", rate: "1%", time: "All day", img: "tyrogue" }
+      ]
+    }
+  ];
+
+  let currentRoute = 0;
+  let caughtData = JSON.parse(localStorage.getItem('reloadedCaught')) || {};
+
+  function init() {
+    document.getElementById('prevBtn').addEventListener('click', () => changeRoute(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => changeRoute(1));
+    renderRoute();
+  }
+
+  function changeRoute(direction) {
+    currentRoute += direction;
+    if (currentRoute < 0) currentRoute = 0;
+    if (currentRoute >= dex.length) currentRoute = dex.length - 1;
+    renderRoute();
+  }
+
+  function toggleCaught(pokeName, cardElement) {
+    if (caughtData[pokeName]) {
+      delete caughtData[pokeName]; 
+      cardElement.classList.remove('caught');
+    } else {
+      caughtData[pokeName] = true; 
+      cardElement.classList.add('caught');
+    }
+    localStorage.setItem('reloadedCaught', JSON.stringify(caughtData));
+    updateProgressText(); 
+  }
+
+  function updateProgressText() {
+    const route = dex[currentRoute];
+    let caughtInRoute = 0;
+    route.pokemon.forEach(poke => {
+      if (caughtData[poke.name]) caughtInRoute++;
+    });
+    document.getElementById('progressText').innerText = `Caught: ${caughtInRoute} / ${route.pokemon.length}`;
+  }
+
+  function getIcon(time) {
+    if (time === "Day only") return "☀️";
+    if (time === "Night only") return "🌙";
+    if (time === "Surfing") return "🌊";
+    if (time === "Fishing") return "🎣";
+    return ""; 
+  }
+
+  function renderRoute() {
+    const route = dex[currentRoute];
+    document.getElementById('routeName').innerText = route.route;
+    
+    document.getElementById('prevBtn').disabled = currentRoute === 0;
+    document.getElementById('nextBtn').disabled = currentRoute === dex.length - 1;
+    
+    const grid = document.getElementById('cardGrid');
+    grid.innerHTML = '';
+    
+    route.pokemon.forEach(poke => {
+      const isCaught = caughtData[poke.name] === true;
+      
+      const card = document.createElement('div');
+      card.className = `card ${isCaught ? 'caught' : ''}`;
+      
+      card.onclick = function() { toggleCaught(poke.name, this); };
+      
+      const imgUrl = `https://img.pokemondb.net/sprites/home/normal/${poke.img}.png`;
+      const icon = getIcon(poke.time);
+      
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">
+            <div class="card-header">${poke.name}</div>
+            <div class="card-image">
+              <img src="${imgUrl}" alt="${poke.name}" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/substitute.png'">
+            </div>
+            <div class="card-footer">
+              <span>${poke.rate}</span>
+              ${icon ? `<span>${icon}</span>` : ''}
+            </div>
+          </div>
+          <div class="card-back">
+            <div class="caught-stamp">CAUGHT!</div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    
+    updateProgressText();
+  }
+
+  window.onload = init;
+</script>
+</body>
+</html>
